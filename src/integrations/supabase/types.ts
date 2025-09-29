@@ -14,7 +14,270 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      achievements: {
+        Row: {
+          condition_type: string
+          condition_value: number
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          points: number
+        }
+        Insert: {
+          condition_type: string
+          condition_value: number
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          name: string
+          points?: number
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: number
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          points?: number
+        }
+        Relationships: []
+      }
+      card_connections: {
+        Row: {
+          condition_type: string | null
+          condition_value: string | null
+          created_at: string
+          id: string
+          source_card_id: string
+          target_card_id: string
+        }
+        Insert: {
+          condition_type?: string | null
+          condition_value?: string | null
+          created_at?: string
+          id?: string
+          source_card_id: string
+          target_card_id: string
+        }
+        Update: {
+          condition_type?: string | null
+          condition_value?: string | null
+          created_at?: string
+          id?: string
+          source_card_id?: string
+          target_card_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_connections_source_card_id_fkey"
+            columns: ["source_card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_connections_target_card_id_fkey"
+            columns: ["target_card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cards: {
+        Row: {
+          column_id: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          estimated_value: number | null
+          id: string
+          points: number | null
+          position: number
+          priority: string | null
+          progress: number | null
+          service_type: string | null
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          column_id: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          estimated_value?: number | null
+          id?: string
+          points?: number | null
+          position: number
+          priority?: string | null
+          progress?: number | null
+          service_type?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          column_id?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          estimated_value?: number | null
+          id?: string
+          points?: number | null
+          position?: number
+          priority?: string | null
+          progress?: number | null
+          service_type?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cards_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "columns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_items: {
+        Row: {
+          card_id: string
+          completed: boolean | null
+          created_at: string
+          id: string
+          position: number
+          title: string
+        }
+        Insert: {
+          card_id: string
+          completed?: boolean | null
+          created_at?: string
+          id?: string
+          position: number
+          title: string
+        }
+        Update: {
+          card_id?: string
+          completed?: boolean | null
+          created_at?: string
+          id?: string
+          position?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      columns: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          position: number
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          position: number
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          experience: number | null
+          id: string
+          level: number | null
+          name: string | null
+          total_points: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          experience?: number | null
+          id?: string
+          level?: number | null
+          name?: string | null
+          total_points?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          experience?: number | null
+          id?: string
+          level?: number | null
+          name?: string | null
+          total_points?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
