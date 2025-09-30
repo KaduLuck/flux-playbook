@@ -10,7 +10,8 @@ import TaskDialog from './TaskDialog';
 import { ColumnContainer } from './ColumnContainer';
 import { TaskCard } from './TaskCard';
 import ProjectWizard from './ProjectWizard';
-
+import { Button } from './ui/button';
+import { PlusIcon } from 'lucide-react';
 
 const KanbanBoard = () => {
   const { columns, cards, setCards, loading, moveCard, generateProjectPlan } = useCards();
@@ -135,8 +136,14 @@ const KanbanBoard = () => {
   }
 
   return (
-    <>
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Quadro Kanban</h1>
+        <Button onClick={() => setShowProjectWizard(true)}>
+          <PlusIcon className="w-4 h-4 mr-2" />
+          Planejar Novo Projeto
+        </Button>
+      </div>
       <div className="flex gap-6 overflow-x-auto pb-4">
         <SortableContext items={columnsId}>
           {columns.map((col) => {
@@ -152,7 +159,6 @@ const KanbanBoard = () => {
       )}
 
       <ProjectWizard open={showProjectWizard} onOpenChange={setShowProjectWizard} onPlanGenerated={handlePlanGenerated} />
-    </DndContext>
       <TaskDialog
         open={showTaskDialog}
         onOpenChange={setShowTaskDialog}
@@ -163,7 +169,7 @@ const KanbanBoard = () => {
           setSelectedCard(null);
         }}
       />
-    </>
+    </DndContext>
   );
 };
 
