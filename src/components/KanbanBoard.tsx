@@ -9,7 +9,7 @@ import { Column, Card as TaskCardType } from '@/types';
 import TaskDialog from './TaskDialog';
 import { ColumnContainer } from './ColumnContainer';
 import { TaskCard } from './TaskCard';
-import ProjectWizard from './ProjectWizard';
+import { ProjectWizard } from './ProjectWizard';
 import { Button } from './ui/button';
 import { PlusIcon } from 'lucide-react';
 
