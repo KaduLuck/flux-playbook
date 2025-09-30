@@ -28,7 +28,7 @@ const KanbanBoard = () => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
+      activationConstraint: { distance: 10 }, // Prevents drag on simple click
     })
   );
 
@@ -41,76 +41,93 @@ const KanbanBoard = () => {
   function onDragEnd(event: DragEndEvent) {
     setActiveCard(null);
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
-    const originalCards = cards;
+    const activeId = active.id;
+    const overId = over.id;
+    if (activeId === overId) return;
 
-    const activeId = active.id as string;
-    const overId = over.id as string;
-    const activeCard = originalCards.find(c => c.id === activeId);
-    if (!activeCard) return;
+    const isActiveACard = active.data.current?.type === 'Card';
+    if (!isActiveACard) return;
+
+    const oldCards = cards; // For optimistic update rollback
 
     setCards(currentCards => {
-        const activeCardIndex = currentCards.findIndex(c => c.id === activeId);
-        const overCardIndex = currentCards.findIndex(c => c.id === overId);
-        const overCard = currentCards[overCardIndex];
-        const activeContainer = active.data.current?.card.column_id;
-        const overContainer = over.data.current?.type === 'Column' ? over.id : over.data.current?.card.column_id;
+      const activeCard = currentCards.find(c => c.id === activeId);
+      if (!activeCard) return currentCards;
 
-        if (!activeContainer || !overContainer) return currentCards;
+      const sourceColumnId = activeCard.column_id;
 
-        let newCardsState = [...currentCards];
+      // Determine destination column
+      const overIsAColumn = over.data.current?.type === 'Column';
+      const destinationColumnId = overIsAColumn
+        ? String(over.id)
+        : currentCards.find(c => c.id === overId)?.column_id;
 
-        if (activeContainer === overContainer) {
-            // Moving within the same column
-            const cardsInColumn = newCardsState.filter(c => c.column_id === activeContainer);
-            const oldIndex = cardsInColumn.findIndex(c => c.id === activeId);
-            let newIndex = cardsInColumn.findIndex(c => c.id === overId);
-            // When hovering over the column itself
-            if (over.data.current?.type === 'Column' && oldIndex !== -1) {
-                 newIndex = cardsInColumn.length;
-            }
-            
-            const movedCardsInColumn = arrayMove(cardsInColumn, oldIndex, newIndex);
-            
-            // Re-integrate into the main cards array
-            const otherCards = newCardsState.filter(c => c.column_id !== activeContainer);
-            newCardsState = [
-                ...otherCards,
-                ...movedCardsInColumn.map((card, index) => ({ ...card, position: index }))
-            ];
-        } else {
-            // Moving to a different column
-            const activeCard = newCardsState[activeCardIndex];
-            activeCard.column_id = overContainer;
+      if (!destinationColumnId) return currentCards;
 
-            const overIsColumn = over.data.current?.type === 'Column';
+      // --- CASE 1: SAME COLUMN --- //
+      if (sourceColumnId === destinationColumnId) {
+        const cardsInColumn = currentCards.filter(c => c.column_id === sourceColumnId);
+        const oldIndex = cardsInColumn.findIndex(c => c.id === activeId);
+        const newIndex = cardsInColumn.findIndex(c => c.id === overId);
 
-            let targetIndex;
-            if (overIsColumn) {
-                targetIndex = newCardsState.filter(c => c.column_id === overContainer).length;
-            } else {
-                targetIndex = newCardsState.filter(c => c.column_id === overContainer).findIndex(c => c.id === overId);
-                if (targetIndex === -1) targetIndex = 0; // Should not happen
-            }
+        if (oldIndex === -1 || newIndex === -1) return currentCards;
 
-            // Remove from old position and insert into new
-            const [movedCard] = newCardsState.splice(activeCardIndex, 1);
-            newCardsState.splice(activeCardIndex < targetIndex ? targetIndex -1 : targetIndex, 0, movedCard);
-            
-            // Re-index both affected columns
-            const affectedColumns = [activeContainer, overContainer];
-            affectedColumns.forEach(columnId => {
-                const cardsToReindex = newCardsState.filter(c => c.column_id === columnId);
-                cardsToReindex.forEach((card, index) => {
-                    const globalIndex = newCardsState.findIndex(c => c.id === card.id);
-                    newCardsState[globalIndex].position = index;
-                });
-            });
-        }
+        // Reorder cards within the specific column
+        const reorderedCardsInColumn = arrayMove(cardsInColumn, oldIndex, newIndex);
 
-        moveCard(newCardsState, originalCards);
-        return newCardsState;
+        // Update position property for the affected cards
+        const updatedCards = reorderedCardsInColumn.map((card, index) => ({
+          ...card,
+          position: index,
+        }));
+
+        // Rebuild the full state
+        const otherCards = currentCards.filter(c => c.column_id !== sourceColumnId);
+        const newFullState = [...otherCards, ...updatedCards];
+        
+        moveCard(newFullState, oldCards);
+        return newFullState;
+      }
+
+      // --- CASE 2: DIFFERENT COLUMNS --- //
+
+      // 1. Re-index source column (without the active card)
+      const updatedSourceCards = currentCards
+        .filter(c => c.column_id === sourceColumnId && c.id !== activeId)
+        .sort((a, b) => a.position - b.position)
+        .map((card, index) => ({ ...card, position: index }));
+
+      // 2. Build new destination column
+      const originalDestCards = currentCards
+        .filter(c => c.column_id === destinationColumnId)
+        .sort((a, b) => a.position - b.position);
+
+      let newIndexInDest;
+      if (overIsAColumn) {
+        newIndexInDest = originalDestCards.length; // Add to the end if dropped on column
+      } else {
+        // Find position of the card we dropped on
+        const overCardIndex = originalDestCards.findIndex(c => c.id === overId);
+        newIndexInDest = overCardIndex >= 0 ? overCardIndex : originalDestCards.length;
+      }
+
+      // Insert the active card into its new spot
+      originalDestCards.splice(newIndexInDest, 0, { ...activeCard, column_id: destinationColumnId });
+
+      // Re-index the entire destination column
+      const updatedDestinationCards = originalDestCards.map((card, index) => ({
+        ...card,
+        position: index,
+      }));
+
+      // 3. Combine everything for the new state
+      const otherCards = currentCards.filter(c => c.column_id !== sourceColumnId && c.column_id !== destinationColumnId);
+      const newFullState = [...otherCards, ...updatedSourceCards, ...updatedDestinationCards];
+
+      moveCard(newFullState, oldCards);
+      return newFullState;
     });
   }
 
@@ -140,7 +157,7 @@ const KanbanBoard = () => {
       <div className="flex gap-6 overflow-x-auto pb-4">
         <SortableContext items={columnsId}>
           {columns.map((col) => {
-            const columnCards = cards.filter((card) => card.column_id === col.id).sort((a,b) => a.position - b.position);
+            const columnCards = cards.filter((card) => card.column_id === col.id).sort((a, b) => a.position - b.position);
             return <ColumnContainer key={col.id} column={col} cards={columnCards} />;
           })}
         </SortableContext>
@@ -150,7 +167,7 @@ const KanbanBoard = () => {
         <DragOverlay>{activeCard && <TaskCard card={activeCard} />}</DragOverlay>,
         document.body
       )}
-      
+
       <ProjectWizard open={showProjectWizard} onOpenChange={setShowProjectWizard} onPlanGenerated={handlePlanGenerated} />
     </DndContext>
   );
