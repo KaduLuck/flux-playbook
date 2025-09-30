@@ -5,7 +5,7 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   // GitHub Pages requires a base path for projects hosted on subdirectories
-  base: "./",
+  base: "/flux-playbook/",
   server: {
     host: "::",
     port: 8080,
