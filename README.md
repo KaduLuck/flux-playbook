@@ -1,73 +1,112 @@
-# Welcome to your Lovable project
+# Flux Business - Business Management System
 
-## Project info
+Flux Business is a comprehensive business management system designed to help entrepreneurs organize, track, and gamify their physical and digital services. It provides a structured yet engaging way to manage workflows using Kanban and node-based visualizations.
 
-**URL**: https://lovable.dev/projects/86ef46fe-5dc5-4ed9-b88b-2721d84ef552
+## Features
 
-## How can I edit this code?
+- Task management via Kanban board
+- Visual node-based workflow mapping
+- Gamification with XP points, levels, and achievements
+- Service type categorization (physical, digital, hybrid)
+- Progress tracking, deadlines, checklists, and estimated values
 
-There are several ways of editing your application.
+## Technology Stack
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Library**: shadcn-ui, Tailwind CSS
+- **State Management**: TanStack Query (React Query)
+- **Backend**: Supabase (Authentication, PostgreSQL database)
+- **Deployment**: GitHub Pages
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/86ef46fe-5dc5-4ed9-b88b-2721d84ef552) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js (version 16 or higher)
+- npm or yarn
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```bash
+# Clone the repository
+git clone <repository-url>
 
-Follow these steps:
+# Navigate to the project directory
+cd flux-playbook-main
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Install dependencies
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Development
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Building for Production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Create a production build
+npm run build
+```
 
-**Use GitHub Codespaces**
+## Deployment to GitHub Pages
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+This project is configured to deploy to GitHub Pages using GitHub Actions.
 
-## What technologies are used for this project?
+1. Create a new repository on GitHub
+2. Push your code to the repository:
+   ```bash
+   git remote add origin https://github.com/your-username/your-repo-name.git
+   git branch -M main
+   git push -u origin main
+   ```
+3. On GitHub, go to Settings > Pages
+4. Under "Source", select "GitHub Actions"
+5. The deployment workflow will automatically run and deploy your site
 
-This project is built with:
+The site will be available at `https://your-username.github.io/your-repo-name/`
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Project Structure
 
-## How can I deploy this project?
+```
+src/
+├── components/          # React components
+│   ├── ui/              # Reusable UI components (shadcn-ui)
+│   ├── AuthPage.tsx     # Authentication page
+│   ├── Dashboard.tsx    # Main dashboard layout
+│   ├── GameStats.tsx    # Gamification statistics
+│   ├── KanbanBoard.tsx  # Kanban board component
+│   ├── NodeFlow.tsx     # Node-based workflow visualization
+│   └── TaskDialog.tsx   # Task creation/editing dialog
+├── hooks/               # Custom React hooks
+├── integrations/        # External service integrations
+│   └── supabase/        # Supabase client and types
+├── lib/                 # Utility functions
+├── pages/               # Page components
+├── types/               # TypeScript type definitions
+└── App.tsx              # Main application component
+```
 
-Simply open [Lovable](https://lovable.dev/projects/86ef46fe-5dc5-4ed9-b88b-2721d84ef552) and click on Share -> Publish.
+## Environment Variables
 
-## Can I connect a custom domain to my Lovable project?
+Create a `.env` file in the root directory with your Supabase credentials:
 
-Yes, you can!
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Contributing
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a pull request
+
+## License
+
+This project is licensed under the MIT License.

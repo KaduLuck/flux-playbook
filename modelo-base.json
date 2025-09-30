@@ -1,0 +1,95 @@
+{
+  "__instrucoes": "Preencha 'cards' com suas tarefas. 'id' é único. 'status_inicial' pode ser Backlog, Em andamento, Concluído. 'proximos' são os IDs dos próximos cards liberados. 'xp' é opcional para gamificação. 'categoria' serve para filtros.",
+  "cards": [
+    {
+      "id": "1",
+      "titulo": "Definir Marca e Nome",
+      "descricao": "Escolher nome comercial (ex.: Igor Tech Solutions), logo simples no Canva.",
+      "status_inicial": "Backlog",
+      "prioridade": "Alta",
+      "xp": 20,
+      "categoria": "Estruturação",
+      "proximos": ["2","3"]
+    },
+    {
+      "id": "2",
+      "titulo": "Criar Catálogo de Serviços",
+      "descricao": "Listar serviços físicos (formatação, upgrades) e digitais (social media, edição vídeos) com preços iniciais.",
+      "status_inicial": "Backlog",
+      "prioridade": "Alta",
+      "xp": 30,
+      "categoria": "Estruturação",
+      "proximos": ["4"]
+    },
+    {
+      "id": "3",
+      "titulo": "Montar Canais de Contato",
+      "descricao": "Criar WhatsApp Business, Instagram, Linktree com links para serviços.",
+      "status_inicial": "Backlog",
+      "prioridade": "Média",
+      "xp": 15,
+      "categoria": "Marketing",
+      "proximos": ["4"]
+    },
+    {
+      "id": "4",
+      "titulo": "Primeiros Pacotes Presenciais",
+      "descricao": "Formatação + SSD + Backup (combo), limpeza + pasta térmica.",
+      "status_inicial": "Backlog",
+      "prioridade": "Alta",
+      "xp": 50,
+      "categoria": "Serviços Presenciais",
+      "proximos": ["5"]
+    },
+    {
+      "id": "5",
+      "titulo": "Primeiros Pacotes Digitais",
+      "descricao": "Pacote Social Media Básico (4 posts/semana), edição de vídeos curtos.",
+      "status_inicial": "Backlog",
+      "prioridade": "Alta",
+      "xp": 50,
+      "categoria": "Serviços Digitais",
+      "proximos": ["6"]
+    },
+    {
+      "id": "6",
+      "titulo": "Criar Automação Interna",
+      "descricao": "No N8N: leads do site → WhatsApp; orçamentos automáticos.",
+      "status_inicial": "Backlog",
+      "prioridade": "Média",
+      "xp": 40,
+      "categoria": "Automação",
+      "proximos": ["7","8"]
+    },
+    {
+      "id": "7",
+      "titulo": "Rodar Primeiro Anúncio Local",
+      "descricao": "Investir R$5–10/dia para impulsionar serviços em Salvador.",
+      "status_inicial": "Backlog",
+      "prioridade": "Média",
+      "xp": 25,
+      "categoria": "Marketing",
+      "proximos": ["9"]
+    },
+    {
+      "id": "8",
+      "titulo": "Fechar Primeiro Contrato Mensal",
+      "descricao": "Pacote manutenção preventiva + suporte remoto ou social media.",
+      "status_inicial": "Backlog",
+      "prioridade": "Alta",
+      "xp": 60,
+      "categoria": "Operação",
+      "proximos": ["9"]
+    },
+    {
+      "id": "9",
+      "titulo": "Pacote Tech + Automação",
+      "descricao": "Oferecer combo (manutenção + automação de leads + social media) para microempresas.",
+      "status_inicial": "Backlog",
+      "prioridade": "Alta",
+      "xp": 80,
+      "categoria": "Expansão",
+      "proximos": []
+    }
+  ]
+}
