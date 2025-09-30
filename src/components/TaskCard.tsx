@@ -14,18 +14,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 interface TaskCardProps {
   card: TaskCardType;
+  onEdit: (card: TaskCardType) => void;
 }
 
-const priorityStyles = cva("", {
+const priorityStyles = cva("border-l-4", {
   variants: {
     priority: {
-      low: "border-t-green-500",
-      medium: "border-t-yellow-500",
-      high: "border-t-orange-500",
-      urgent: "border-t-red-500",
+      low: 'border-l-gray-400',
+      medium: 'border-l-blue-400',
+      high: 'border-l-orange-400',
+      urgent: 'border-l-red-500',
     },
   },
   defaultVariants: {
@@ -33,7 +35,20 @@ const priorityStyles = cva("", {
   },
 });
 
-export const TaskCard = ({ card }: TaskCardProps) => {
+const priorityBadges = {
+    low: 'bg-gray-500/10 text-gray-600 border-gray-300',
+    medium: 'bg-blue-500/10 text-blue-600 border-blue-300',
+    high: 'bg-orange-500/10 text-orange-600 border-orange-300',
+    urgent: 'bg-red-500/10 text-red-600 border-red-300',
+};
+
+const serviceTypeColors = {
+    physical: 'bg-success/10 text-success border-success/30',
+    digital: 'bg-info/10 text-info border-info/30',
+    both: 'bg-warning/10 text-warning border-warning/30',
+};
+
+export const TaskCard = ({ card, onEdit }: TaskCardProps) => {
   const [isMouseOver, setIsMouseOver] = useState(false);
 
   const {
@@ -77,9 +92,13 @@ export const TaskCard = ({ card }: TaskCardProps) => {
       {...attributes}
       onMouseEnter={() => setIsMouseOver(true)}
       onMouseLeave={() => setIsMouseOver(false)}
-      className={`touch-none min-h-[120px] rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-lg transition-shadow duration-200 ${priorityStyles({ priority: card.priority as any })}`}
+      className={cn(
+        "touch-none min-h-[120px] rounded-lg border bg-card/60 backdrop-blur-sm text-card-foreground shadow-sm hover:shadow-md transition-shadow duration-200",
+        priorityStyles({ priority: card.priority as any })
+      )}
+      onClick={() => onEdit(card)}
     >
-      <CardHeader className="p-4 flex flex-row items-start justify-between">
+      <CardHeader className="p-4 flex flex-row items-start justify-between gap-2">
         <div {...listeners} className="flex items-center gap-2 cursor-grab w-full pr-4">
            {isMouseOver && <GripVertical className="h-5 w-5 text-muted-foreground" />}
           <CardTitle className="text-base font-medium leading-tight line-clamp-2">
@@ -98,17 +117,49 @@ export const TaskCard = ({ card }: TaskCardProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent onClick={handleDropdownClick} align="end">
-            <DropdownMenuItem>Editar</DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(card); }}>Editar</DropdownMenuItem>
             <DropdownMenuItem className="text-red-500">Excluir</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        {card.service_type && (
-          <Badge variant="outline" className="capitalize">
-            {card.service_type === 'both' ? 'Físico & Digital' : (card.service_type === 'physical' ? 'Físico' : 'Digital')}
-          </Badge>
-        )}
+      <CardContent className="pt-0 px-4 pb-4">
+          {card.description && (
+            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+              {card.description}
+            </p>
+          )}
+          
+          <div className="flex flex-wrap gap-2 mb-3">
+              <Badge 
+                  variant="outline" 
+                  className={cn("text-xs", priorityBadges[card.priority])}
+              >
+                  {card.priority === 'low' && 'Baixa'}
+                  {card.priority === 'medium' && 'Média'}
+                  {card.priority === 'high' && 'Alta'}
+                  {card.priority === 'urgent' && 'Urgente'}
+              </Badge>
+              
+              <Badge 
+                  variant="outline" 
+                  className={cn("text-xs", serviceTypeColors[card.service_type])}
+              >
+                  {card.service_type === 'physical' && '🔧 Físico'}
+                  {card.service_type === 'digital' && '💻 Digital'}
+                  {card.service_type === 'both' && '⚡ Híbrido'}
+              </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              💎 {card.points} pts
+            </span>
+            {card.due_date && (
+              <span>
+                📅 {new Date(card.due_date).toLocaleDateString('pt-BR')}
+              </span>
+            )}
+          </div>
       </CardContent>
     </Card>
   );

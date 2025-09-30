@@ -1,6 +1,5 @@
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { Column, Card as TaskCardType } from "@/types";
-import { CSS } from "@dnd-kit/utilities";
 import { useMemo } from "react";
 import { Plus } from "lucide-react";
 import { Badge } from "./ui/badge";
@@ -10,9 +9,11 @@ import { TaskCard } from "./TaskCard";
 interface Props {
   column: Column;
   cards: TaskCardType[];
+  onCreateCard: (columnId: string) => void;
+  onEditCard: (card: TaskCardType) => void;
 }
 
-export function ColumnContainer({ column, cards }: Props) {
+export function ColumnContainer({ column, cards, onCreateCard, onEditCard }: Props) {
   const cardsIds = useMemo(() => {
     return cards.map((card) => card.id);
   }, [cards]);
@@ -38,16 +39,16 @@ export function ColumnContainer({ column, cards }: Props) {
             <h3 className="font-semibold text-foreground">{column.name}</h3>
             <Badge variant="secondary" className="text-xs">{cards.length}</Badge>
           </div>
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 hover:bg-primary/10">
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 hover:bg-primary/10" onClick={() => onCreateCard(column.id)}>
             <Plus className="w-4 h-4" />
           </Button>
         </div>
       </div>
       {/* Column task container */}
       <div className="space-y-3 min-h-[200px]">
-        <SortableContext items={cardsIds} strategy={verticalListSortingStrategy}>
+        <SortableContext items={cardsIds}>
           {cards.map((card) => (
-            <TaskCard key={card.id} card={card} />
+            <TaskCard key={card.id} card={card} onEdit={onEditCard} />
           ))}
         </SortableContext>
       </div>
