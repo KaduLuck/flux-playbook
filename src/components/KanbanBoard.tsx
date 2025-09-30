@@ -1,201 +1,158 @@
-import { useState } from 'react';
-import { Plus, MoreHorizontal } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+} from '@dnd-kit/core';
+import { SortableContext, arrayMove } from '@dnd-kit/sortable';
+import { createPortal } from 'react-dom';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useCards } from '@/hooks/useCards';
-import { Column, Card as TaskCard } from '@/types';
-import TaskDialog from './TaskDialog';
-import { cn } from '@/lib/utils';
+import { Column, Card as TaskCardType } from '@/types';
+import { ProjectWizard } from './ProjectWizard';
+import { ColumnContainer } from './ColumnContainer';
+import { TaskCard } from './TaskCard';
+import { initialCardsData } from '@/lib/initial-data';
 
 const KanbanBoard = () => {
-  const { columns, getCardsByColumn, loading } = useCards();
-  const [selectedCard, setSelectedCard] = useState<TaskCard | null>(null);
-  const [showTaskDialog, setShowTaskDialog] = useState(false);
-  const [selectedColumn, setSelectedColumn] = useState<string>('');
+  const { columns, cards, setCards, loading, moveCard, generateProjectPlan } = useCards();
+  const [showProjectWizard, setShowProjectWizard] = useState(false);
+  const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
+  const [activeCard, setActiveCard] = useState<TaskCardType | null>(null);
 
-  const priorityColors = {
-    low: 'border-l-gray-400',
-    medium: 'border-l-blue-400',
-    high: 'border-l-orange-400', 
-    urgent: 'border-l-red-500',
-  };
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
 
-  const priorityBadges = {
-    low: 'bg-gray-500/10 text-gray-600 border-gray-300',
-    medium: 'bg-blue-500/10 text-blue-600 border-blue-300',
-    high: 'bg-orange-500/10 text-orange-600 border-orange-300',
-    urgent: 'bg-red-500/10 text-red-600 border-red-300',
-  };
-
-  const serviceTypeColors = {
-    physical: 'bg-success/10 text-success border-success/30',
-    digital: 'bg-info/10 text-info border-info/30', 
-    both: 'bg-warning/10 text-warning border-warning/30',
-  };
-
-  const handleCreateTask = (columnId: string) => {
-    setSelectedColumn(columnId);
-    setSelectedCard(null);
-    setShowTaskDialog(true);
-  };
-
-  const handleEditTask = (card: TaskCard) => {
-    setSelectedCard(card);
-    setShowTaskDialog(true);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
+  function onDragStart(event: DragStartEvent) {
+    if (event.active.data.current?.type === 'Card') {
+      setActiveCard(event.active.data.current.card);
+    }
   }
 
-  return (
-    <>
-      <div className="flex gap-6 overflow-x-auto pb-4">
-        {columns.map((column) => {
-          const columnCards = getCardsByColumn(column.id);
-          
-          return (
-            <div key={column.id} className="flex-shrink-0 w-80">
-              {/* Column Header */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: column.color }}
-                    />
-                    <h3 className="font-semibold text-foreground">{column.name}</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      {columnCards.length}
-                    </Badge>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleCreateTask(column.id)}
-                    className="h-8 w-8 p-0 hover:bg-primary/10"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                
-                {/* Progress for completed column */}
-                {column.name === 'Concluído' && columnCards.length > 0 && (
-                  <div className="mb-2">
-                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                      <span>Progresso Mensal</span>
-                      <span>{columnCards.length} tarefas</span>
-                    </div>
-                    <Progress value={Math.min((columnCards.length / 20) * 100, 100)} className="h-1" />
-                  </div>
-                )}
-              </div>
+  function onDragEnd(event: DragEndEvent) {
+    setActiveCard(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-              {/* Cards */}
-              <div className="space-y-3 min-h-[200px]">
-                {columnCards.map((card) => (
-                  <Card 
-                    key={card.id} 
-                    className={cn(
-                      "cursor-pointer hover:shadow-md transition-shadow border-l-4 bg-card/60 backdrop-blur-sm",
-                      priorityColors[card.priority]
-                    )}
-                    onClick={() => handleEditTask(card)}
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-sm font-medium leading-tight line-clamp-2">
-                          {card.title}
-                        </CardTitle>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 opacity-60">
-                          <MoreHorizontal className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0">
-                      {card.description && (
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                          {card.description}
-                        </p>
-                      )}
-                      
-                      {/* Progress Bar */}
-                      {card.progress > 0 && (
-                        <div className="mb-3">
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="text-muted-foreground">Progresso</span>
-                            <span className="font-medium">{card.progress}%</span>
-                          </div>
-                          <Progress value={card.progress} className="h-1.5" />
-                        </div>
-                      )}
-                      
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        <Badge 
-                          variant="outline" 
-                          className={cn("text-xs", priorityBadges[card.priority])}
-                        >
-                          {card.priority === 'low' && 'Baixa'}
-                          {card.priority === 'medium' && 'Média'}
-                          {card.priority === 'high' && 'Alta'}
-                          {card.priority === 'urgent' && 'Urgente'}
-                        </Badge>
-                        
-                        <Badge 
-                          variant="outline" 
-                          className={cn("text-xs", serviceTypeColors[card.service_type])}
-                        >
-                          {card.service_type === 'physical' && '🔧 Físico'}
-                          {card.service_type === 'digital' && '💻 Digital'}
-                          {card.service_type === 'both' && '⚡ Híbrido'}
-                        </Badge>
-                      </div>
-                      
-                      {/* Footer */}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          💎 {card.points} pts
-                        </span>
-                        {card.estimated_value > 0 && (
-                          <span className="text-success font-medium">
-                            R$ {card.estimated_value.toLocaleString('pt-BR')}
-                          </span>
-                        )}
-                        {card.due_date && (
-                          <span>
-                            📅 {new Date(card.due_date).toLocaleDateString('pt-BR')}
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+    const originalCards = cards;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    const activeCard = originalCards.find(c => c.id === activeId);
+    if (!activeCard) return;
+
+    setCards(currentCards => {
+        const activeCardIndex = currentCards.findIndex(c => c.id === activeId);
+        const overCardIndex = currentCards.findIndex(c => c.id === overId);
+        const overCard = currentCards[overCardIndex];
+        const activeContainer = active.data.current?.card.column_id;
+        const overContainer = over.data.current?.type === 'Column' ? over.id : over.data.current?.card.column_id;
+
+        if (!activeContainer || !overContainer) return currentCards;
+
+        let newCardsState = [...currentCards];
+
+        if (activeContainer === overContainer) {
+            // Moving within the same column
+            const cardsInColumn = newCardsState.filter(c => c.column_id === activeContainer);
+            const oldIndex = cardsInColumn.findIndex(c => c.id === activeId);
+            let newIndex = cardsInColumn.findIndex(c => c.id === overId);
+            // When hovering over the column itself
+            if (over.data.current?.type === 'Column' && oldIndex !== -1) {
+                 newIndex = cardsInColumn.length;
+            }
+            
+            const movedCardsInColumn = arrayMove(cardsInColumn, oldIndex, newIndex);
+            
+            // Re-integrate into the main cards array
+            const otherCards = newCardsState.filter(c => c.column_id !== activeContainer);
+            newCardsState = [
+                ...otherCards,
+                ...movedCardsInColumn.map((card, index) => ({ ...card, position: index }))
+            ];
+        } else {
+            // Moving to a different column
+            const activeCard = newCardsState[activeCardIndex];
+            activeCard.column_id = overContainer;
+
+            const overIsColumn = over.data.current?.type === 'Column';
+
+            let targetIndex;
+            if (overIsColumn) {
+                targetIndex = newCardsState.filter(c => c.column_id === overContainer).length;
+            } else {
+                targetIndex = newCardsState.filter(c => c.column_id === overContainer).findIndex(c => c.id === overId);
+                if (targetIndex === -1) targetIndex = 0; // Should not happen
+            }
+
+            // Remove from old position and insert into new
+            const [movedCard] = newCardsState.splice(activeCardIndex, 1);
+            newCardsState.splice(activeCardIndex < targetIndex ? targetIndex -1 : targetIndex, 0, movedCard);
+            
+            // Re-index both affected columns
+            const affectedColumns = [activeContainer, overContainer];
+            affectedColumns.forEach(columnId => {
+                const cardsToReindex = newCardsState.filter(c => c.column_id === columnId);
+                cardsToReindex.forEach((card, index) => {
+                    const globalIndex = newCardsState.findIndex(c => c.id === card.id);
+                    newCardsState[globalIndex].position = index;
+                });
+            });
+        }
+
+        moveCard(newCardsState, originalCards);
+        return newCardsState;
+    });
+  }
+
+  if (loading && !cards.length) {
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div></div>;
+  }
+
+  const handlePlanGenerated = async () => {
+    setShowProjectWizard(false);
+    await generateProjectPlan(initialCardsData);
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      collisionDetection={closestCorners}
+    >
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setShowProjectWizard(true)}>
+          <Sparkles className="w-4 h-4 mr-2" />
+          Gerar Novo Plano com IA
+        </Button>
       </div>
 
-      {/* Task Dialog */}
-      <TaskDialog
-        open={showTaskDialog}
-        onOpenChange={setShowTaskDialog}
-        card={selectedCard}
-        columnId={selectedColumn}
-        onSuccess={() => {
-          setShowTaskDialog(false);
-          setSelectedCard(null);
-        }}
-      />
-    </>
+      <div className="flex gap-6 overflow-x-auto pb-4">
+        <SortableContext items={columnsId}>
+          {columns.map((col) => {
+            const columnCards = cards.filter((card) => card.column_id === col.id).sort((a,b) => a.position - b.position);
+            return <ColumnContainer key={col.id} column={col} cards={columnCards} />;
+          })}
+        </SortableContext>
+      </div>
+
+      {createPortal(
+        <DragOverlay>{activeCard && <TaskCard card={activeCard} />}</DragOverlay>,
+        document.body
+      )}
+      
+      <ProjectWizard open={showProjectWizard} onOpenChange={setShowProjectWizard} onPlanGenerated={handlePlanGenerated} />
+    </DndContext>
   );
 };
 
