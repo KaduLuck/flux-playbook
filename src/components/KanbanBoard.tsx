@@ -50,59 +50,69 @@ const KanbanBoard = () => {
     const oldCards = [...cards];
 
     setCards(currentCards => {
-      const activeCardIndex = currentCards.findIndex(c => c.id === activeId);
-      if (activeCardIndex === -1) return currentCards;
+      const activeIndex = currentCards.findIndex((c) => c.id === activeId);
+      if (activeIndex === -1) return currentCards;
 
-      const activeCard = { ...currentCards[activeCardIndex] };
-      const sourceColumnId = activeCard.column_id;
+      const overIsColumn = over.data.current?.type === 'Column';
+      const overIndex = currentCards.findIndex((c) => c.id === overId);
 
-      const overIsAColumn = over.data.current?.type === 'Column';
-      const overCardIndex = currentCards.findIndex(c => c.id === overId);
-      
-      const destinationColumnId = overIsAColumn
-        ? String(over.id)
-        : overCardIndex !== -1 ? currentCards[overCardIndex].column_id : null;
-
-      if (!destinationColumnId) return currentCards;
+      const sourceColumnId = currentCards[activeIndex].column_id;
+      const destinationColumnId = overIsColumn 
+        ? String(overId) 
+        : (overIndex !== -1 ? currentCards[overIndex].column_id : sourceColumnId);
 
       if (sourceColumnId === destinationColumnId) {
-        // Reordering within the same column
-        const overIndex = overCardIndex !== -1 ? overCardIndex : currentCards.length -1;
-        const newCards = arrayMove(currentCards, activeCardIndex, overIndex);
-        moveCard(newCards, oldCards);
-        return newCards;
-      }
+        if (overIndex === -1) return currentCards;
 
-      // Moving to a different column
-      const newCards = [...currentCards];
-      const movedCard = { ...newCards.splice(activeCardIndex, 1)[0], column_id: destinationColumnId };
+        let cardsInColumn = currentCards.filter(c => c.column_id === sourceColumnId);
+        const activeCardInColumnIndex = cardsInColumn.findIndex(c => c.id === activeId);
+        const overCardInColumnIndex = cardsInColumn.findIndex(c => c.id === overId);
 
-      let newIndexInDest;
-      const cardsInDestColumn = newCards.filter(c => c.column_id === destinationColumnId);
+        if (activeCardInColumnIndex === -1 || overCardInColumnIndex === -1) return currentCards;
+        
+        const reorderedCardsInColumn = arrayMove(cardsInColumn, activeCardInColumnIndex, overCardInColumnIndex);
 
-      if (overIsAColumn) {
-        newIndexInDest = cardsInDestColumn.length;
+        const updatedCardsInColumn = reorderedCardsInColumn.map((card, index) => ({
+          ...card,
+          position: index,
+        }));
+
+        const otherCards = currentCards.filter(c => c.column_id !== sourceColumnId);
+        const newFullState = [...otherCards, ...updatedCardsInColumn];
+
+        moveCard(newFullState, oldCards);
+        return newFullState;
       } else {
-        const overCardInDestIndex = cardsInDestColumn.findIndex(c => c.id === overId);
-        newIndexInDest = overCardInDestIndex !== -1 ? overCardInDestIndex : cardsInDestColumn.length;
+        const activeCard = { ...currentCards[activeIndex] };
+
+        const sourceCards = currentCards
+          .filter(c => c.column_id === sourceColumnId && c.id !== activeId)
+          .sort((a, b) => a.position - b.position)
+          .map((card, index) => ({ ...card, position: index }));
+
+        let destCards = currentCards.filter(c => c.column_id === destinationColumnId);
+        
+        let newIndexInDest;
+        if (overIsColumn) {
+          newIndexInDest = destCards.length;
+        } else {
+          const overCardInDestIndex = destCards.findIndex(c => c.id === overId);
+          newIndexInDest = overCardInDestIndex !== -1 ? overCardInDestIndex : destCards.length;
+        }
+
+        destCards.splice(newIndexInDest, 0, { ...activeCard, column_id: destinationColumnId });
+        
+        const updatedDestinationCards = destCards.map((card, index) => ({
+          ...card,
+          position: index,
+        }));
+
+        const otherCards = currentCards.filter(c => c.column_id !== sourceColumnId && c.column_id !== destinationColumnId);
+        const newFullState = [...otherCards, ...sourceCards, ...updatedDestinationCards];
+
+        moveCard(newFullState, oldCards);
+        return newFullState;
       }
-
-      const destCardsWithMoved = [...cardsInDestColumn];
-      destCardsWithMoved.splice(newIndexInDest, 0, movedCard);
-
-      const finalDestCards = destCardsWithMoved.map((card, index) => ({ ...card, position: index }));
-
-      const sourceCards = newCards
-        .filter(c => c.column_id === sourceColumnId)
-        .sort((a,b) => a.position - b.position)
-        .map((card, index) => ({ ...card, position: index }));
-
-      const otherCards = newCards.filter(c => c.column_id !== sourceColumnId && c.column_id !== destinationColumnId);
-
-      const finalState = [...otherCards, ...sourceCards, ...finalDestCards];
-
-      moveCard(finalState, oldCards);
-      return finalState;
     });
   }
 
