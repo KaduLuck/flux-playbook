@@ -114,7 +114,7 @@ export const useCards = () => {
     }
   };
 
-    const moveCard = async (newCards: Card[], oldCards: Card[]) => {
+  const moveCard = async (newCards: Card[], oldCards: Card[]) => {
     if (!user) return;
 
     const changedCards = newCards.filter(newCard => {
@@ -125,15 +125,12 @@ export const useCards = () => {
     if (changedCards.length === 0) return;
 
     const updates = changedCards.map(card => ({
-      id: card.id,
-      user_id: user.id, // Adicionando a user_id para a operação de upsert
-      column_id: card.column_id,
-      position: card.position,
+      ...card,
+      user_id: user.id,
       status: columns.find(c => c.id === card.column_id)?.name === 'Concluído' ? 'completed' : 'in_progress',
     }));
 
     try {
-      // Usar o estado newCards diretamente para a UI para uma resposta mais rápida
       setCards(newCards);
 
       const { error } = await supabase.from('cards').upsert(updates);
@@ -156,7 +153,6 @@ export const useCards = () => {
     } catch (error) {
       console.error('Error moving cards:', error);
       toast.error('Erro ao mover as tarefas. Revertendo alterações.');
-      // Reverter para o estado antigo em caso de erro
       setCards(oldCards);
     }
   };
