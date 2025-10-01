@@ -124,11 +124,15 @@ export const useCards = () => {
 
     if (changedCards.length === 0) return;
 
-    const updates = changedCards.map(card => ({
-      ...card,
-      user_id: user.id,
-      status: columns.find(c => c.id === card.column_id)?.name === 'Concluído' ? 'completed' : 'in_progress',
-    }));
+    const updates = changedCards.map(changedCard => {
+      const originalCard = oldCards.find(c => c.id === changedCard.id);
+      return {
+        ...(originalCard || {}),
+        ...changedCard,
+        user_id: user.id,
+        status: columns.find(c => c.id === changedCard.column_id)?.name === 'Concluído' ? 'completed' : 'in_progress',
+      };
+    });
 
     try {
       setCards(newCards);
@@ -146,7 +150,8 @@ export const useCards = () => {
       });
 
       if (completedCard) {
-        const cardPoints = completedCard.points || 10;
+        const fullCompletedCard = newCards.find(c => c.id === completedCard.id)
+        const cardPoints = fullCompletedCard?.points || 10;
         await addExperience(cardPoints);
         toast.success(`🎉 Tarefa concluída! +${cardPoints} XP`);
       }
